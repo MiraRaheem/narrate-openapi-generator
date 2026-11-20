@@ -1,258 +1,76 @@
-# NARRATE Blueprint Unified OpenAPI Generator
+# NARRATE Blueprint Unified OpenAPI Contract
 
-## Overview
+This repository generates and packages an OpenAPI contract for the NARRATE Blueprint Management System. The contract describes the generic entity APIs, metadata discovery, the legacy semantic query, and the additive advanced query endpoint.
 
-This utility automatically generates a unified OpenAPI/Swagger specification for the NARRATE Blueprint ecosystem using the ontology metadata APIs exposed by the Blueprint platform.
+## Source and generated files
 
-The generator dynamically discovers:
+- `generate_openapi.py` is the contract generator.
+- `narrate_openapi.json` is the generated contract intended for GitHub, Swagger Editor, Postman, and the ADIMME/API Registry.
+- `src/main/webapp/openapi.json` is a synchronized copy served by the web application at `/openapi.json` after deployment.
 
-- Ontology classes
-- Data properties
-- Object properties
-- Numeric properties
-- Enumerated properties
-- Cardinality constraints
+Commit the generator, README, and generated JSON together so the published contract and its generator stay in sync. Import `narrate_openapi.json` into the API Registry after reviewing the generated result.
 
-and transforms them into a machine-readable OpenAPI contract.
+## Generate from a running BMS
 
-The purpose of this generator is to provide the IMC and related NARRATE components with a unified, discoverable, and up-to-date API specification without requiring manual maintenance of static schemas.
-
----
-
-# Generated Output
-
-The script generates:
-
-```text
-narrate_openapi.json
-```
-
-which contains:
-
-- OpenAPI 3.0 specification
-- Ontology-derived schemas
-- Generic CRUD endpoints
-- Metadata discovery endpoints
-- Semantic query endpoints
-
-The generated file can be imported directly into:
-
-- Swagger Editor
-- Swagger UI
-- Postman
-- API Gateway tools
-- IMC integration tooling
-
----
-
-# Supported Endpoints
-
-The generated OpenAPI contract documents the following Blueprint APIs.
-
----
-
-## Ontology Discovery
-
-### Get ontology classes
-
-```http
-GET /api/classes
-```
-
-Returns all ontology classes available in the Blueprint.
-
----
-
-### Get ontology metadata
-
-```http
-GET /api/query/metadata/{className}
-```
-
-Returns semantic metadata for a class including:
-
-- data properties
-- object properties
-- enumerations
-- cardinalities
-- numeric properties
-
----
-
-# Generic Entity APIs
-
----
-
-## Get all instances of a class
-
-```http
-GET /api/{className}
-```
-
-Example:
-
-```http
-GET /api/Product
-```
-
----
-
-## Get individual details
-
-```http
-GET /api/{className}/{id}
-```
-
-Example:
-
-```http
-GET /api/Product/Product_1
-```
-
----
-
-## Get full multi-valued details
-
-```http
-GET /api/full/{id}
-```
-
-Returns expanded details including multi-valued properties.
-
----
-
-# CRUD Operations
-
----
-
-## Create instance
-
-```http
-POST /api/{className}
-```
-
----
-
-## Update instance
-
-```http
-PUT /api/{className}/{id}
-```
-
----
-
-## Delete instance
-
-```http
-DELETE /api/{className}/{id}
-```
-
----
-
-# Semantic Query API
-
----
-
-## Execute semantic query
-
-```http
-POST /api/query
-```
-
-This endpoint forwards semantic ontology-driven queries to the Blueprint query engine.
-
----
-
-# Architecture
-
-The generator follows a metadata-driven approach.
-
-```text
-Ontology Metadata API
-        ↓
-Metadata Extraction
-        ↓
-Dynamic OpenAPI Schema Generation
-        ↓
-Unified Swagger/OpenAPI Contract
-```
-
-This ensures that the generated specification remains synchronized with ontology evolution without requiring manual schema rewriting.
-
----
-
-# Requirements
-
-Python 3.9+
-
-Required package:
-
-```bash
-pip install requests
-```
-
----
-
-# Configuration
-
-Update the Blueprint server URL inside the script:
-
-```python
-BASE_URL = "https://narrate-webapp-tcxs.onrender.com"
-```
-
----
-
-# Usage
-
-Run:
+Requirement: Python 3.9+ (the generator uses only the standard library).
 
 ```bash
 python generate_openapi.py
 ```
 
-The generated OpenAPI file will be saved as:
+The default server is `https://narrate-webapp-tcxs.onrender.com`. The generator reads `/api/classes`, then fetches `/api/query/metadata/{className}` for each class and generates ontology-derived schemas. Override the base URL when needed:
 
-```text
-narrate_openapi.json
+```bash
+python generate_openapi.py --base-url http://localhost:8081/OntologyWebApp
 ```
 
----
+You can also set `NARRATE_BASE_URL` instead of passing `--base-url`.
 
-# Import into Swagger Editor
+## Regenerate without network access
 
-You can validate and visualize the generated contract using:
+An existing generated contract can supply class-schema snapshots while the generator rebuilds the operation documentation:
 
-https://editor.swagger.io/
+```bash
+python generate_openapi.py --seed-json "narrate_openapi.json"
+```
 
-Simply paste the generated JSON content into the editor.
+For a one-time seed from an earlier generated contract, pass its path with `--seed-json`. This preserves the available class schemas but does not refresh them from live ontology metadata.
 
----
+To generate only the root contract and not the web-served copy:
 
-# Notes
+```bash
+python generate_openapi.py --no-web-copy
+```
 
-- The OpenAPI schemas are generated dynamically from ontology metadata.
-- No manual endpoint enumeration is required.
-- The generated schemas automatically adapt to ontology evolution.
-- Object properties are represented as arrays of related entity identifiers.
-- Cardinality constraints are included as custom OpenAPI extensions.
+## Documented query APIs
 
----
+### Metadata discovery
 
-# Purpose within NARRATE
+`GET /api/classes` lists ontology classes. Retrieve `GET /api/query/metadata/{className}` before creating semantic filters; the metadata response describes data properties, object properties, numeric and enumerated properties, and cardinality constraints.
 
-This generator is intended to support:
+### Legacy semantic query
 
-- IMC integration
-- Dynamic Blueprint discovery
-- AI-assisted query orchestration
-- Unified API governance
-- Cross-work-package interoperability
+`POST /api/query` returns matching individual identifiers and fuzzy-match notes. It accepts `className`, `dataProperties`, `objectProperties`, `includeFuzzy`, and `fuzzyThreshold`. Numeric comparison expressions such as `>=1000` and `<50` are supported. This operation retains its existing response format.
 
-while maintaining synchronization with the underlying ontology structure.
+### Advanced semantic query
 
----
+`POST /api/v2/query` is additive and leaves the legacy API unchanged. It supports:
 
-# Maintainers
+- `mode: "records"` to return individual identifiers and property details.
+- `select` to choose returned properties.
+- `orderBy`, `limit`, and `offset` to sort and page record results.
+- `mode: "count"` to return the number of matches without records.
+- `mode: "aggregate"` with `count`, `sum`, `avg`, `min`, or `max` specifications.
+- Validation errors for unknown classes and unknown or inapplicable properties.
 
-NARRATE Blueprint Team
+The API currently reports the match total as `totalMatches`. Record pagination limits the response, but the current implementation evaluates and loads the matching records before slicing a page. Aggregations run over all matching records and ignore `limit`/`offset`. Grouped aggregates and paginated relationship expansion are not currently implemented.
+
+### Product type versus manufactured product
+
+`ProductType` describes a product catalogue definition (for example, a model or offering). `ManufacturedProduct` identifies a physical manufactured instance associated with a product type. The two classes should not be treated as interchangeable.
+
+## Validate and publish
+
+The generator writes OpenAPI 3.0.3 JSON. Check the generated JSON in Swagger Editor and make sure the server URL, metadata, examples, and response names match the deployed API before publishing. The custom `x-imc-*` operation extensions describe client-facing roles and request/response field mappings; they do not change API behavior.
+
+After review, commit `generate_openapi.py`, `README.md`, and `narrate_openapi.json` together. The generator also updates `src/main/webapp/openapi.json`, which is included in the WAR and served at `/openapi.json`.
