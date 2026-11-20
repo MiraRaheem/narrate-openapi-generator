@@ -11,6 +11,171 @@
     }
   ],
   "paths": {
+    "/api/v2/query": {
+      "post": {
+        "operationId": "advancedSemanticQuery",
+        "summary": "Query, page, sort, select, or aggregate individuals",
+        "description": "Additive semantic query endpoint. Records mode returns selected property details with pagination; count mode returns only the match count; aggregate mode supports count, sum, avg, min, and max. Aggregation applies to all matching individuals, independent of limit and offset. Class and property names are validated.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdvancedQueryRequest"
+              },
+              "examples": {
+                "pagedRecords": {
+                  "summary": "Select, sort, and page ManufacturedProduct records",
+                  "value": {
+                    "className": "ManufacturedProduct",
+                    "filters": {
+                      "dataProperties": {
+                        "hasManufacturedQuantity": "5"
+                      }
+                    },
+                    "mode": "records",
+                    "select": [
+                      "hasManufacturedQuantity",
+                      "isInstanceOfProductType"
+                    ],
+                    "orderBy": {
+                      "property": "hasManufacturedQuantity",
+                      "direction": "asc"
+                    },
+                    "limit": 10,
+                    "offset": 0
+                  }
+                },
+                "countOnly": {
+                  "summary": "Count matching products",
+                  "value": {
+                    "className": "ManufacturedProduct",
+                    "filters": {
+                      "dataProperties": {
+                        "hasManufacturedQuantity": "5"
+                      }
+                    },
+                    "mode": "count"
+                  }
+                },
+                "aggregate": {
+                  "summary": "Aggregate quantity",
+                  "value": {
+                    "className": "ManufacturedProduct",
+                    "mode": "aggregate",
+                    "aggregates": [
+                      {
+                        "function": "sum",
+                        "property": "hasManufacturedQuantity",
+                        "as": "totalQuantity"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Records, count, or aggregate results according to mode",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdvancedQueryResponse"
+                },
+                "examples": {
+                  "records": {
+                    "value": {
+                      "status": "success",
+                      "class": "ManufacturedProduct",
+                      "mode": "records",
+                      "totalMatches": 122,
+                      "records": [
+                        {
+                          "id": "ManufacturedProduct_1",
+                          "data": {
+                            "hasManufacturedQuantity": [
+                              "5"
+                            ]
+                          }
+                        }
+                      ],
+                      "pagination": {
+                        "limit": 10,
+                        "offset": 0,
+                        "returned": 1,
+                        "totalMatches": 122,
+                        "hasMore": true,
+                        "nextOffset": 1
+                      }
+                    }
+                  },
+                  "count": {
+                    "value": {
+                      "status": "success",
+                      "class": "ManufacturedProduct",
+                      "mode": "count",
+                      "totalMatches": 122,
+                      "count": 122
+                    }
+                  },
+                  "aggregate": {
+                    "value": {
+                      "status": "success",
+                      "class": "ManufacturedProduct",
+                      "mode": "aggregate",
+                      "totalMatches": 122,
+                      "aggregates": {
+                        "totalQuantity": 610
+                      },
+                      "aggregationScope": "all matching individuals; limit and offset are not applied"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Unknown class/property or invalid parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdvancedQueryError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdvancedQueryError"
+                }
+              }
+            }
+          }
+        },
+        "x-imc-operation-role": "advanced-semantic-query",
+        "x-imc-request-mapping": {
+          "className": "body.className",
+          "filters": "body.filters",
+          "requestedProperties": "body.select",
+          "sortPropertyAndDirection": "body.orderBy",
+          "pageSize": "body.limit",
+          "pageOffset": "body.offset",
+          "resultMode": "body.mode",
+          "aggregateSpecifications": "body.aggregates"
+        },
+        "x-imc-response-mapping": {
+          "matchingIndividualCount": "totalMatches",
+          "recordIdentifiersAndProperties": "records[].id,data",
+          "paginationMetadata": "pagination",
+          "aggregateValues": "aggregates"
+        }
+      }
+    },
     "/api/classes": {
       "get": {
         "summary": "Get all ontology classes",
@@ -761,6 +926,139 @@
         "responses": {
           "200": {
             "description": "ProductionBottleneckEvent deleted"
+          }
+        }
+      }
+    },
+    "/api/EnergySourceRecord": {
+      "get": {
+        "summary": "Get all EnergySourceRecord instances",
+        "responses": {
+          "200": {
+            "description": "List of EnergySourceRecord instances",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "class": {
+                      "type": "string"
+                    },
+                    "count": {
+                      "type": "integer"
+                    },
+                    "instances": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create EnergySourceRecord instance",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EnergySourceRecord"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "EnergySourceRecord created"
+          }
+        }
+      }
+    },
+    "/api/EnergySourceRecord/{id}": {
+      "get": {
+        "summary": "Get EnergySourceRecord instance details",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "EnergySourceRecord instance details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "class": {
+                      "type": "string"
+                    },
+                    "instance": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/EnergySourceRecord"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update EnergySourceRecord instance",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EnergySourceRecord"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "EnergySourceRecord updated"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete EnergySourceRecord instance",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "EnergySourceRecord deleted"
           }
         }
       }
@@ -1958,6 +2256,139 @@
         "responses": {
           "200": {
             "description": "ProductType deleted"
+          }
+        }
+      }
+    },
+    "/api/DisruptionType": {
+      "get": {
+        "summary": "Get all DisruptionType instances",
+        "responses": {
+          "200": {
+            "description": "List of DisruptionType instances",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "class": {
+                      "type": "string"
+                    },
+                    "count": {
+                      "type": "integer"
+                    },
+                    "instances": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create DisruptionType instance",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DisruptionType"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "DisruptionType created"
+          }
+        }
+      }
+    },
+    "/api/DisruptionType/{id}": {
+      "get": {
+        "summary": "Get DisruptionType instance details",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "DisruptionType instance details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "class": {
+                      "type": "string"
+                    },
+                    "instance": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/DisruptionType"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update DisruptionType instance",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DisruptionType"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "DisruptionType updated"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete DisruptionType instance",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "DisruptionType deleted"
           }
         }
       }
@@ -3957,6 +4388,139 @@
         }
       }
     },
+    "/api/DisruptionResolution": {
+      "get": {
+        "summary": "Get all DisruptionResolution instances",
+        "responses": {
+          "200": {
+            "description": "List of DisruptionResolution instances",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "class": {
+                      "type": "string"
+                    },
+                    "count": {
+                      "type": "integer"
+                    },
+                    "instances": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create DisruptionResolution instance",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DisruptionResolution"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "DisruptionResolution created"
+          }
+        }
+      }
+    },
+    "/api/DisruptionResolution/{id}": {
+      "get": {
+        "summary": "Get DisruptionResolution instance details",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "DisruptionResolution instance details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "class": {
+                      "type": "string"
+                    },
+                    "instance": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/DisruptionResolution"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update DisruptionResolution instance",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DisruptionResolution"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "DisruptionResolution updated"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete DisruptionResolution instance",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "DisruptionResolution deleted"
+          }
+        }
+      }
+    },
     "/api/Machine": {
       "get": {
         "summary": "Get all Machine instances",
@@ -4356,6 +4920,139 @@
         }
       }
     },
+    "/api/RecoveryPlan": {
+      "get": {
+        "summary": "Get all RecoveryPlan instances",
+        "responses": {
+          "200": {
+            "description": "List of RecoveryPlan instances",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "class": {
+                      "type": "string"
+                    },
+                    "count": {
+                      "type": "integer"
+                    },
+                    "instances": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create RecoveryPlan instance",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecoveryPlan"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "RecoveryPlan created"
+          }
+        }
+      }
+    },
+    "/api/RecoveryPlan/{id}": {
+      "get": {
+        "summary": "Get RecoveryPlan instance details",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "RecoveryPlan instance details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "class": {
+                      "type": "string"
+                    },
+                    "instance": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/RecoveryPlan"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update RecoveryPlan instance",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecoveryPlan"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "RecoveryPlan updated"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete RecoveryPlan instance",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "RecoveryPlan deleted"
+          }
+        }
+      }
+    },
     "/api/WaterKPI": {
       "get": {
         "summary": "Get all WaterKPI instances",
@@ -4485,6 +5182,139 @@
         "responses": {
           "200": {
             "description": "WaterKPI deleted"
+          }
+        }
+      }
+    },
+    "/api/RecoveryAction": {
+      "get": {
+        "summary": "Get all RecoveryAction instances",
+        "responses": {
+          "200": {
+            "description": "List of RecoveryAction instances",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "class": {
+                      "type": "string"
+                    },
+                    "count": {
+                      "type": "integer"
+                    },
+                    "instances": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create RecoveryAction instance",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecoveryAction"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "RecoveryAction created"
+          }
+        }
+      }
+    },
+    "/api/RecoveryAction/{id}": {
+      "get": {
+        "summary": "Get RecoveryAction instance details",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "RecoveryAction instance details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "class": {
+                      "type": "string"
+                    },
+                    "instance": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/RecoveryAction"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update RecoveryAction instance",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecoveryAction"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "RecoveryAction updated"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete RecoveryAction instance",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "RecoveryAction deleted"
           }
         }
       }
@@ -6484,6 +7314,139 @@
         }
       }
     },
+    "/api/KPIEvaluationLevel": {
+      "get": {
+        "summary": "Get all KPIEvaluationLevel instances",
+        "responses": {
+          "200": {
+            "description": "List of KPIEvaluationLevel instances",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "class": {
+                      "type": "string"
+                    },
+                    "count": {
+                      "type": "integer"
+                    },
+                    "instances": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create KPIEvaluationLevel instance",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KPIEvaluationLevel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "KPIEvaluationLevel created"
+          }
+        }
+      }
+    },
+    "/api/KPIEvaluationLevel/{id}": {
+      "get": {
+        "summary": "Get KPIEvaluationLevel instance details",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "KPIEvaluationLevel instance details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "class": {
+                      "type": "string"
+                    },
+                    "instance": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/KPIEvaluationLevel"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update KPIEvaluationLevel instance",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KPIEvaluationLevel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "KPIEvaluationLevel updated"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete KPIEvaluationLevel instance",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "KPIEvaluationLevel deleted"
+          }
+        }
+      }
+    },
     "/api/ProductionPlan": {
       "get": {
         "summary": "Get all ProductionPlan instances",
@@ -6883,6 +7846,139 @@
         }
       }
     },
+    "/api/MitigationStrategy": {
+      "get": {
+        "summary": "Get all MitigationStrategy instances",
+        "responses": {
+          "200": {
+            "description": "List of MitigationStrategy instances",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "class": {
+                      "type": "string"
+                    },
+                    "count": {
+                      "type": "integer"
+                    },
+                    "instances": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create MitigationStrategy instance",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MitigationStrategy"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "MitigationStrategy created"
+          }
+        }
+      }
+    },
+    "/api/MitigationStrategy/{id}": {
+      "get": {
+        "summary": "Get MitigationStrategy instance details",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "MitigationStrategy instance details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "class": {
+                      "type": "string"
+                    },
+                    "instance": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/MitigationStrategy"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update MitigationStrategy instance",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MitigationStrategy"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "MitigationStrategy updated"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete MitigationStrategy instance",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "MitigationStrategy deleted"
+          }
+        }
+      }
+    },
     "/api/SensorObservationEvent": {
       "get": {
         "summary": "Get all SensorObservationEvent instances",
@@ -7012,6 +8108,139 @@
         "responses": {
           "200": {
             "description": "SensorObservationEvent deleted"
+          }
+        }
+      }
+    },
+    "/api/BenchmarkAssessment": {
+      "get": {
+        "summary": "Get all BenchmarkAssessment instances",
+        "responses": {
+          "200": {
+            "description": "List of BenchmarkAssessment instances",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "class": {
+                      "type": "string"
+                    },
+                    "count": {
+                      "type": "integer"
+                    },
+                    "instances": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create BenchmarkAssessment instance",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BenchmarkAssessment"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "BenchmarkAssessment created"
+          }
+        }
+      }
+    },
+    "/api/BenchmarkAssessment/{id}": {
+      "get": {
+        "summary": "Get BenchmarkAssessment instance details",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "BenchmarkAssessment instance details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "class": {
+                      "type": "string"
+                    },
+                    "instance": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/BenchmarkAssessment"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update BenchmarkAssessment instance",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BenchmarkAssessment"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "BenchmarkAssessment updated"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete BenchmarkAssessment instance",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "BenchmarkAssessment deleted"
           }
         }
       }
@@ -7278,6 +8507,139 @@
         "responses": {
           "200": {
             "description": "AestheticSpecification deleted"
+          }
+        }
+      }
+    },
+    "/api/DisruptionCause": {
+      "get": {
+        "summary": "Get all DisruptionCause instances",
+        "responses": {
+          "200": {
+            "description": "List of DisruptionCause instances",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "class": {
+                      "type": "string"
+                    },
+                    "count": {
+                      "type": "integer"
+                    },
+                    "instances": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create DisruptionCause instance",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DisruptionCause"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "DisruptionCause created"
+          }
+        }
+      }
+    },
+    "/api/DisruptionCause/{id}": {
+      "get": {
+        "summary": "Get DisruptionCause instance details",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "DisruptionCause instance details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "class": {
+                      "type": "string"
+                    },
+                    "instance": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/DisruptionCause"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update DisruptionCause instance",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DisruptionCause"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "DisruptionCause updated"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete DisruptionCause instance",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "DisruptionCause deleted"
           }
         }
       }
@@ -9410,6 +10772,139 @@
         }
       }
     },
+    "/api/TransportRoute": {
+      "get": {
+        "summary": "Get all TransportRoute instances",
+        "responses": {
+          "200": {
+            "description": "List of TransportRoute instances",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "class": {
+                      "type": "string"
+                    },
+                    "count": {
+                      "type": "integer"
+                    },
+                    "instances": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create TransportRoute instance",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransportRoute"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "TransportRoute created"
+          }
+        }
+      }
+    },
+    "/api/TransportRoute/{id}": {
+      "get": {
+        "summary": "Get TransportRoute instance details",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "TransportRoute instance details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "class": {
+                      "type": "string"
+                    },
+                    "instance": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/TransportRoute"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update TransportRoute instance",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransportRoute"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "TransportRoute updated"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete TransportRoute instance",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "TransportRoute deleted"
+          }
+        }
+      }
+    },
     "/api/OutsourcedComponent": {
       "get": {
         "summary": "Get all OutsourcedComponent instances",
@@ -9672,6 +11167,139 @@
         "responses": {
           "200": {
             "description": "MaterialSupplier deleted"
+          }
+        }
+      }
+    },
+    "/api/Disruption": {
+      "get": {
+        "summary": "Get all Disruption instances",
+        "responses": {
+          "200": {
+            "description": "List of Disruption instances",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "class": {
+                      "type": "string"
+                    },
+                    "count": {
+                      "type": "integer"
+                    },
+                    "instances": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create Disruption instance",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Disruption"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Disruption created"
+          }
+        }
+      }
+    },
+    "/api/Disruption/{id}": {
+      "get": {
+        "summary": "Get Disruption instance details",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Disruption instance details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "class": {
+                      "type": "string"
+                    },
+                    "instance": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Disruption"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update Disruption instance",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Disruption"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Disruption updated"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete Disruption instance",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Disruption deleted"
           }
         }
       }
@@ -12203,6 +13831,139 @@
         }
       }
     },
+    "/api/ImpactAssessment": {
+      "get": {
+        "summary": "Get all ImpactAssessment instances",
+        "responses": {
+          "200": {
+            "description": "List of ImpactAssessment instances",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "class": {
+                      "type": "string"
+                    },
+                    "count": {
+                      "type": "integer"
+                    },
+                    "instances": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create ImpactAssessment instance",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImpactAssessment"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ImpactAssessment created"
+          }
+        }
+      }
+    },
+    "/api/ImpactAssessment/{id}": {
+      "get": {
+        "summary": "Get ImpactAssessment instance details",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ImpactAssessment instance details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "class": {
+                      "type": "string"
+                    },
+                    "instance": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/ImpactAssessment"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update ImpactAssessment instance",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImpactAssessment"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ImpactAssessment updated"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete ImpactAssessment instance",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ImpactAssessment deleted"
+          }
+        }
+      }
+    },
     "/api/DerivedEvent": {
       "get": {
         "summary": "Get all DerivedEvent instances",
@@ -13536,6 +15297,325 @@
   },
   "components": {
     "schemas": {
+      "AdvancedQueryRequest": {
+        "type": "object",
+        "required": [
+          "className"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "className": {
+            "type": "string",
+            "description": "Ontology class local name."
+          },
+          "filters": {
+            "type": "object",
+            "properties": {
+              "dataProperties": {
+                "type": "object",
+                "additionalProperties": {
+                  "oneOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    }
+                  ]
+                }
+              },
+              "objectProperties": {
+                "type": "object",
+                "additionalProperties": {
+                  "oneOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    }
+                  ]
+                }
+              }
+            },
+            "additionalProperties": false
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "records",
+              "count",
+              "aggregate"
+            ],
+            "default": "records"
+          },
+          "select": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          },
+          "orderBy": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "required": [
+                  "property"
+                ],
+                "properties": {
+                  "property": {
+                    "type": "string"
+                  },
+                  "direction": {
+                    "type": "string",
+                    "enum": [
+                      "asc",
+                      "desc"
+                    ],
+                    "default": "asc"
+                  }
+                },
+                "additionalProperties": false
+              }
+            ]
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000,
+            "default": 100
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0,
+            "default": 0
+          },
+          "aggregates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AggregateSpec"
+            }
+          }
+        }
+      },
+      "AggregateSpec": {
+        "type": "object",
+        "required": [
+          "function"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "function": {
+            "type": "string",
+            "enum": [
+              "count",
+              "sum",
+              "avg",
+              "min",
+              "max"
+            ]
+          },
+          "property": {
+            "type": "string"
+          },
+          "as": {
+            "type": "string"
+          }
+        }
+      },
+      "AdvancedQueryError": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "error"
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          }
+        }
+      },
+      "AdvancedQueryResponse": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "status",
+              "class",
+              "mode",
+              "totalMatches",
+              "records",
+              "pagination"
+            ],
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "success"
+                ]
+              },
+              "class": {
+                "type": "string"
+              },
+              "mode": {
+                "type": "string",
+                "enum": [
+                  "records"
+                ]
+              },
+              "totalMatches": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "records": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "data"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "pagination": {
+                "type": "object",
+                "required": [
+                  "limit",
+                  "offset",
+                  "returned",
+                  "totalMatches",
+                  "hasMore",
+                  "nextOffset"
+                ],
+                "properties": {
+                  "limit": {
+                    "type": "integer"
+                  },
+                  "offset": {
+                    "type": "integer"
+                  },
+                  "returned": {
+                    "type": "integer"
+                  },
+                  "totalMatches": {
+                    "type": "integer"
+                  },
+                  "hasMore": {
+                    "type": "boolean"
+                  },
+                  "nextOffset": {
+                    "type": "integer",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "status",
+              "class",
+              "mode",
+              "totalMatches",
+              "count"
+            ],
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "success"
+                ]
+              },
+              "class": {
+                "type": "string"
+              },
+              "mode": {
+                "type": "string",
+                "enum": [
+                  "count"
+                ]
+              },
+              "totalMatches": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "count": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "status",
+              "class",
+              "mode",
+              "totalMatches",
+              "aggregates",
+              "aggregationScope"
+            ],
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "success"
+                ]
+              },
+              "class": {
+                "type": "string"
+              },
+              "mode": {
+                "type": "string",
+                "enum": [
+                  "aggregate"
+                ]
+              },
+              "totalMatches": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "aggregates": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "number",
+                  "nullable": true
+                }
+              },
+              "aggregationScope": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "discriminator": {
+          "propertyName": "mode"
+        }
+      },
       "ClassMetadata": {
         "type": "object",
         "properties": {
@@ -13789,6 +15869,13 @@
           "isTransportProvider": {
             "type": "string"
           },
+          "supplierAffectedByDisruption": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Identifies a disruption affecting the supplier's ability to fulfill its supply commitments."
+          },
           "hasSupplierMetadata": {
             "type": "array",
             "items": {
@@ -13953,6 +16040,35 @@
           }
         }
       },
+      "EnergySourceRecord": {
+        "type": "object",
+        "properties": {
+          "hasEnergyConsumptionUnit": {
+            "type": "string",
+            "description": "Specifies the measurement unit associated with hasEnergyConsumption, such as kWh for electricity, L for liquid fuel, m3 for natural gas, or a source-specific unit for other energy. The unit must be compatible with the corresponding emission factor."
+          },
+          "hasEnergySourceType": {
+            "type": "string",
+            "description": "Identifies the type of energy source represented by an EnergySourceRecord, such as Electricity, Gasoil, NaturalGas, or Other. Used to distinguish energy sources when calculating production-process carbon footprints."
+          },
+          "hasEnergyEmissionFactor": {
+            "type": "number"
+          },
+          "hasEnergyRenewableFraction": {
+            "type": "number"
+          },
+          "hasEnergyConsumption": {
+            "type": "number"
+          },
+          "isEnergySourceRecordOf": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Inverse of hasEnergySourceRecord. Links an EnergySourceRecord to the ProcessSustainability individual for which the energy consumption, emission factor, and renewable energy fraction are recorded."
+          }
+        }
+      },
       "ProductionProcess": {
         "type": "object",
         "properties": {
@@ -14078,6 +16194,13 @@
             },
             "description": "Indicates that a ProductionProcess is assessed by a WaterKPI, providing water-related performance measurements for that process."
           },
+          "productionProcessAffectedByDisruption": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Identifies disruptions affecting the execution, scheduling, resource availability, or operational performance of a production process."
+          },
           "hasMetric": {
             "type": "array",
             "items": {
@@ -14201,6 +16324,13 @@
               "type": "string"
             },
             "description": "Inverse of:SLA applied on production request"
+          },
+          "workOrderAffectedByDisruption": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Identifies disruptions affecting the planned fulfillment, production activities, or completion schedule of a work order."
           },
           "workOrderCreatedBy": {
             "type": "array",
@@ -14613,6 +16743,26 @@
           }
         }
       },
+      "DisruptionType": {
+        "type": "object",
+        "properties": {
+          "disruptionTypeDescription": {
+            "type": "string",
+            "description": "Provides a concise description of the disruption category and the operational circumstances it covers."
+          },
+          "disruptionTypeName": {
+            "type": "string",
+            "description": "IIdentifies the operational category of a disruption. Allowed values: Supply (material or supplier availability problems); Production (manufacturing process interruptions or bottlenecks); Equipment (machine failures or equipment unavailability); Transportation (shipment, delivery, or logistics disruptions); Quality (product or material quality problems); Other (disruptions not covered by the defined categories)."
+          },
+          "isDisruptionTypeOf": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Identifies the disruptions classified under a particular disruption type."
+          }
+        }
+      },
       "WarehouseSustainability": {
         "type": "object",
         "properties": {
@@ -14632,6 +16782,13 @@
           "hasGreenBuildingCertification": {
             "type": "string",
             "description": "Name/ID of green building certification"
+          },
+          "logisticsSustainabilityAffectedByDisruption": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Identifies disruptions affecting the sustainability performance or environmental consequences represented by a logistics sustainability entity."
           },
           "sustainabilityOfWarehouse": {
             "type": "array",
@@ -15161,6 +17318,13 @@
             },
             "description": "Indicates that the SLA applies to a specific product or customized order. Associates a ServiceLevelAgreement with one or more ManufacturedProduct entities whose production or fulfillment activities are governed by the agreement."
           },
+          "slAgreementAffectedByDisruption": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Identifies disruptions affecting or potentially jeopardizing the commitments established by a service-level agreement."
+          },
           "requiresCertificate_SLA": {
             "type": "array",
             "items": {
@@ -15187,22 +17351,46 @@
       "ProcessSustainability": {
         "type": "object",
         "properties": {
+          "hasNonHazardousWastePerUnit": {
+            "type": "number"
+          },
           "expectedNoiseLevelDb": {
             "type": "number"
           },
           "renewableEnergyShare": {
             "type": "number"
           },
+          "hasNonHazardousWasteInternallyRecycled": {
+            "type": "number"
+          },
+          "hasWaterUsage": {
+            "type": "number"
+          },
           "resourceUtilization": {
+            "type": "number"
+          },
+          "hasWaterWaste": {
+            "type": "number"
+          },
+          "hasHazardousWastePerUnit": {
             "type": "number"
           },
           "materialWaste": {
             "type": "number"
           },
+          "hasHazardousWasteExternalRecycling": {
+            "type": "number"
+          },
           "plannedCycleTimeSeconds": {
             "type": "number"
           },
+          "hasNonHazardousWasteExternalRecycling": {
+            "type": "number"
+          },
           "hasWasteLandfillIncineration": {
+            "type": "number"
+          },
+          "hasWaterUsePerKg": {
             "type": "number"
           },
           "energySourceType": {
@@ -15213,6 +17401,9 @@
               "other",
               "solar"
             ]
+          },
+          "hasHazardousWasteInternallyRecycled": {
+            "type": "number"
           },
           "expectedEnergyConsumption": {
             "type": "number"
@@ -15234,6 +17425,9 @@
           "WaterUsage": {
             "type": "number"
           },
+          "hasNonHazardousWasteLandfillIncineration": {
+            "type": "number"
+          },
           "carbonIntensityPerUnit": {
             "type": "number"
           },
@@ -15252,7 +17446,25 @@
               "raw material"
             ]
           },
+          "hasHazardousWasteGenerated": {
+            "type": "number"
+          },
+          "hasProductionOutputKG": {
+            "type": "number"
+          },
+          "hasWastewaterPerKg": {
+            "type": "number"
+          },
           "processTemperatureCelsius": {
+            "type": "number"
+          },
+          "hasWasteExternalRecycling": {
+            "type": "number"
+          },
+          "hasHazardousWasteLandfillIncineration": {
+            "type": "number"
+          },
+          "hasNonHazardousWasteGenerated": {
             "type": "number"
           },
           "usesHazardousMaterial": {
@@ -15278,6 +17490,13 @@
               "type": "string"
             },
             "description": "Indicates that a Sustainability entity describes or evaluates the environmental and resource-related performance of a specific ProcessExecution. Associates a Sustainability entity with a ProcessExecution whose runtime manufacturing activities, environmental impact, resource usage, emissions, waste generation, or operational sustainability performance are being monitored or evaluated."
+          },
+          "hasEnergySourceRecord": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Links a ProcessSustainability individual to an EnergySourceRecord describing the consumption and emission characteristics of a specific energy source used by the production process. Multiple energy source records may be associated with the same process sustainability record."
           },
           "sustainabilityOfMachine": {
             "type": "array",
@@ -15328,6 +17547,13 @@
           "hasSustainabilityReportLink": {
             "type": "string",
             "description": "URL or document reference to sustainability report."
+          },
+          "logisticsSustainabilityAffectedByDisruption": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Identifies disruptions affecting the sustainability performance or environmental consequences represented by a logistics sustainability entity."
           },
           "sustainabilityOfLogistics": {
             "type": "array",
@@ -15401,6 +17627,9 @@
       "MaterialSustainability": {
         "type": "object",
         "properties": {
+          "hasMaterialRecycledContent": {
+            "type": "number"
+          },
           "hasMaterialSustainDataSource": {
             "type": "string",
             "description": "Origin or system providing the sustainability data"
@@ -15550,6 +17779,40 @@
               "type": "string"
             },
             "description": "inverse of observesProduction: Links the observation to the sensor that produced it. Ensures traceability and correct semantic chain."
+          }
+        }
+      },
+      "DisruptionResolution": {
+        "type": "object",
+        "properties": {
+          "disruptionResolutionTime": {
+            "type": "string",
+            "description": "Records the date and time when the disruption was resolved and affected operations were restored to an acceptable state."
+          },
+          "disruptionResolutionID": {
+            "type": "string",
+            "description": "Unique identifier assigned to a disruption resolution record within NARRATE."
+          },
+          "resolutionStatus": {
+            "type": "string",
+            "enum": [
+              "Active",
+              "Cancelled",
+              "Mitigated",
+              "Resolved",
+              "Unknown"
+            ]
+          },
+          "resolutionDescription": {
+            "type": "string",
+            "description": "Describes the outcome of disruption management, including measures taken and the extent to which affected operations have been restored."
+          },
+          "isResolutionOfDisruption": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Identifies the disruption associated with a recorded resolution outcome."
           }
         }
       },
@@ -15892,15 +18155,67 @@
               "type": "string"
             },
             "description": "Specifies which measurable property is being observed (e.g., CycleTime, Temperature)."
+          },
+          "sensorDetectsDisruption": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Identifies disruptions detected using observations or measurements provided by a sensor."
+          }
+        }
+      },
+      "RecoveryPlan": {
+        "type": "object",
+        "properties": {
+          "recoveryPlanDescription": {
+            "type": "string",
+            "description": "Describes the coordinated recovery activities intended to restore affected operations and support the selected mitigation strategy."
+          },
+          "recoveryPlanEndTime": {
+            "type": "string",
+            "description": "Records the date and time when execution of the recovery plan is completed."
+          },
+          "recoveryPlanName": {
+            "type": "string",
+            "description": "Short human-readable name identifying the recovery plan."
+          },
+          "recoveryPlanID": {
+            "type": "string",
+            "description": "Unique identifier assigned to a recovery plan within NARRATE."
+          },
+          "recoveryPlanStatus": {
+            "type": "string",
+            "enum": [
+              "Cancelled",
+              "Completed",
+              "InExecution",
+              "Planned"
+            ]
+          },
+          "recoveryPlanStartTime": {
+            "type": "string",
+            "description": "Records the date and time when execution of the recovery plan begins."
+          },
+          "hasRecoveryAction": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Associates a recovery plan with an action planned or performed to restore operations affected by a disruption."
+          },
+          "isRecoveryPlanOf": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Identifies the mitigation strategy supported by a recovery plan."
           }
         }
       },
       "WaterKPI": {
         "type": "object",
         "properties": {
-          "waterUsage": {
-            "type": "number"
-          },
           "waterUsagePerKg": {
             "type": "number"
           },
@@ -15917,6 +18232,9 @@
           "wastewaterGenerated": {
             "type": "number"
           },
+          "waterUsage": {
+            "type": "number"
+          },
           "waterKPIEvaluatesProcess": {
             "type": "array",
             "items": {
@@ -15924,12 +18242,93 @@
             },
             "description": "Links a WaterKPI to the ProductionProcess it assesses, indicating that the KPI quantifies the water-related performance (e.g., consumption or wastewater generation) of that process."
           },
+          "waterKPIAllocatedToProduct": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Links a WaterKPI to a Product, indicating that the water-related impact measured at process level has been allocated to the product based on a defined allocation approach."
+          },
           "WaterKPIAllocatedToProduct": {
             "type": "array",
             "items": {
               "type": "string"
             },
             "description": "Links a WaterKPI to a Product, indicating that the water-related impact measured at process level has been allocated to the product based on a defined allocation approach."
+          }
+        }
+      },
+      "RecoveryAction": {
+        "type": "object",
+        "properties": {
+          "recoveryActionName": {
+            "type": "string",
+            "description": "Short human-readable name identifying a specific recovery activity performed or planned to restore disrupted operations."
+          },
+          "actionDescription": {
+            "type": "string",
+            "description": "Human-readable description of the action."
+          },
+          "actionTimestamp": {
+            "type": "string",
+            "description": "Timestamp indicating when the action is created or executed."
+          },
+          "priorityLevel": {
+            "type": "string",
+            "description": "Indicates the urgency or priority of the action (controlled vocabulary)."
+          },
+          "actionStatus": {
+            "type": "string",
+            "enum": [
+              "Cancelled",
+              "Completed",
+              "InExecution",
+              "Planned"
+            ]
+          },
+          "recoveryActionStartTime": {
+            "type": "string",
+            "description": "Records the date and time when execution of the recovery action begins."
+          },
+          "actionID": {
+            "type": "string",
+            "description": "Unique identifier of the action."
+          },
+          "actionType": {
+            "type": "string",
+            "description": "Category of the action (e.g., Maintenance, Logistics, Production)."
+          },
+          "recoveryActionEndTime": {
+            "type": "string",
+            "description": "Records the date and time when execution of the recovery action is completed."
+          },
+          "actionAffectsKPI": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Indicates which KPIs are expected to be influenced by the action"
+          },
+          "isRequiredByEvent": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Inverse of requiresAction: Indicates that the event requires an operational or decision-making response (e.g., maintenance, rescheduling, rerouting)."
+          },
+          "isRecoveryActionOf": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Identifies the recovery plan to which a recovery action belongs."
+          },
+          "targetsEntity": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Specifies the entity on which the action is performed (e.g., machine, shipment, process)."
           }
         }
       },
@@ -16055,6 +18454,13 @@
           "isTransportProvider": {
             "type": "string"
           },
+          "supplierAffectedByDisruption": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Identifies a disruption affecting the supplier's ability to fulfill its supply commitments."
+          },
           "hasSupplierMetadata": {
             "type": "array",
             "items": {
@@ -16107,8 +18513,32 @@
             "type": "string",
             "description": "Specifies the origin of the benchmark value, such as a standard (e.g., ISO), industry guideline, or authoritative dataset."
           },
+          "benchmarkValidTo": {
+            "type": "string",
+            "description": "End of the period during which the benchmark is applicable."
+          },
+          "benchmarkID": {
+            "type": "string",
+            "description": "Unique identifier of the KPI benchmark."
+          },
+          "benchmarkUnit": {
+            "type": "string",
+            "description": "Measurement unit of the benchmark value, which must be compatible with the evaluated KPI unit."
+          },
           "benchmarkValue": {
             "type": "number"
+          },
+          "benchmarkValidFrom": {
+            "type": "string",
+            "description": "Start of the period during which the benchmark is applicable."
+          },
+          "benchmarkComparisonOperator": {
+            "type": "string",
+            "enum": [
+              "<=",
+              "=",
+              ">="
+            ]
           },
           "benchmarkYear": {
             "type": "number"
@@ -16119,6 +18549,13 @@
               "type": "string"
             },
             "description": "Links a KPIBenchmark to the KPI it refers to, indicating that the benchmark value is defined for evaluating the performance of that specific KPI."
+          },
+          "isAssessedBy": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Identifies the benchmark assessments in which a particular KPI benchmark has been applied. This inverse relationship supports retrieval of historical comparison outcomes, analysis of benchmark compliance, and examination of KPI performance against a shared reference target."
           }
         }
       },
@@ -16383,6 +18820,13 @@
           "kpiValue": {
             "type": "number"
           },
+          "hasEvaluationLevel": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Associates a KPI definition with the level of analysis at which its values are intended to be evaluated. The evaluation level determines whether the KPI concerns an individual raw material, a manufactured product, or a production process. This relationship supports consistent selection of evaluation contexts, aggregation rules, and applicable benchmarks."
+          },
           "isProducedByFormula": {
             "type": "array",
             "items": {
@@ -16410,6 +18854,20 @@
               "type": "string"
             },
             "description": "Inverse of affectsKPI: Links an event to one or more KPIs that are impacted, enabling performance evaluation and monitoring."
+          },
+          "kpiAffectedByDisruption": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Identifies disruptions that affect or may affect the measured value, target achievement, or operational performance represented by a key performance indicator."
+          },
+          "kpiAssessedByImpactAssessment": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Identifies impact assessments that evaluate a key performance indicator to determine the operational or business consequences of a disruption."
           },
           "isEvaluatedByEvaluation": {
             "type": "array",
@@ -16545,6 +19003,13 @@
               "type": "string"
             },
             "description": "Links the observation to the sensor that produced it. Ensures traceability and correct semantic chain."
+          },
+          "sensorDetectsDisruption": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Identifies disruptions detected using observations or measurements provided by a sensor."
           }
         }
       },
@@ -16659,6 +19124,13 @@
               "type": "string"
             },
             "description": "Represents the capability of the production monitoring sensor to detect production-related events such as bottlenecks or performance degradation. In practice these events are derived from sensor observations."
+          },
+          "sensorDetectsDisruption": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Identifies disruptions detected using observations or measurements provided by a sensor."
           }
         }
       },
@@ -16981,6 +19453,18 @@
           }
         }
       },
+      "KPIEvaluationLevel": {
+        "type": "object",
+        "properties": {
+          "isEvaluationLevelOf": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Identifies the KPI definitions associated with a particular evaluation level. This inverse relationship enables retrieval of all KPIs intended for raw-material, manufactured-product, or production-process evaluation."
+          }
+        }
+      },
       "ProductionPlan": {
         "type": "object",
         "properties": {
@@ -17008,6 +19492,13 @@
               "type": "string"
             },
             "description": ""
+          },
+          "productionPlanAffectedByDisruption": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Identifies disruptions affecting the scheduled activities, resource requirements, or planned manufacturing execution defined by a production plan."
           },
           "organizesWordOrder": {
             "type": "array",
@@ -17094,6 +19585,13 @@
           "kpiValue": {
             "type": "number"
           },
+          "hasEvaluationLevel": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Associates a KPI definition with the level of analysis at which its values are intended to be evaluated. The evaluation level determines whether the KPI concerns an individual raw material, a manufactured product, or a production process. This relationship supports consistent selection of evaluation contexts, aggregation rules, and applicable benchmarks."
+          },
           "isProducedByFormula": {
             "type": "array",
             "items": {
@@ -17121,6 +19619,20 @@
               "type": "string"
             },
             "description": "Inverse of affectsKPI: Links an event to one or more KPIs that are impacted, enabling performance evaluation and monitoring."
+          },
+          "kpiAffectedByDisruption": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Identifies disruptions that affect or may affect the measured value, target achievement, or operational performance represented by a key performance indicator."
+          },
+          "kpiAssessedByImpactAssessment": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Identifies impact assessments that evaluate a key performance indicator to determine the operational or business consequences of a disruption."
           },
           "isEvaluatedByEvaluation": {
             "type": "array",
@@ -17190,6 +19702,13 @@
           "kpiValue": {
             "type": "number"
           },
+          "hasEvaluationLevel": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Associates a KPI definition with the level of analysis at which its values are intended to be evaluated. The evaluation level determines whether the KPI concerns an individual raw material, a manufactured product, or a production process. This relationship supports consistent selection of evaluation contexts, aggregation rules, and applicable benchmarks."
+          },
           "isProducedByFormula": {
             "type": "array",
             "items": {
@@ -17217,6 +19736,20 @@
               "type": "string"
             },
             "description": "Inverse of affectsKPI: Links an event to one or more KPIs that are impacted, enabling performance evaluation and monitoring."
+          },
+          "kpiAffectedByDisruption": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Identifies disruptions that affect or may affect the measured value, target achievement, or operational performance represented by a key performance indicator."
+          },
+          "kpiAssessedByImpactAssessment": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Identifies impact assessments that evaluate a key performance indicator to determine the operational or business consequences of a disruption."
           },
           "isEvaluatedByEvaluation": {
             "type": "array",
@@ -17255,6 +19788,60 @@
           }
         }
       },
+      "MitigationStrategy": {
+        "type": "object",
+        "properties": {
+          "mitigationStrategyName": {
+            "type": "string",
+            "description": "Short human-readable name identifying the mitigation strategy."
+          },
+          "strategyType": {
+            "type": "string",
+            "enum": [
+              "AlternativeWorkflow",
+              "ContingencyPlan",
+              "ImmediateResponse",
+              "MaintenanceAction",
+              "Other",
+              "ProcessReconfiguration",
+              "ResourceReallocation",
+              "SupplierSubstitution"
+            ]
+          },
+          "strategyStatus": {
+            "type": "string",
+            "enum": [
+              "Cancelled",
+              "Completed",
+              "InExecution",
+              "Proposed",
+              "Selected"
+            ]
+          },
+          "mitigationStrategyDescription": {
+            "type": "string",
+            "description": "Describes the proposed or selected approach for reducing disruption impacts, maintaining operational continuity, or supporting recovery."
+          },
+          "mitigationStrategyID": {
+            "type": "string",
+            "description": "Unique identifier assigned to a mitigation strategy within NARRATE."
+          },
+          "isMitigationStrategyFor": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Identifies the disruption addressed by a proposed or selected mitigation strategy."
+          },
+          "hasRecoveryPlan": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Associates a mitigation strategy with a recovery plan that organizes activities required to implement the strategy and restore affected operations."
+          }
+        }
+      },
       "SensorObservationEvent": {
         "type": "object",
         "properties": {
@@ -17264,6 +19851,47 @@
               "type": "string"
             },
             "description": "Links the event to the underlying observation containing the measured data."
+          }
+        }
+      },
+      "BenchmarkAssessment": {
+        "type": "object",
+        "properties": {
+          "meetsBenchmark": {
+            "type": "string",
+            "description": "Indicates whether the computed KPI value satisfies the comparison condition defined by the associated benchmark. A value of true indicates that the benchmark target has been met, while false indicates that the target has not been met. This property should remain unassigned when the benchmark assessment has not been completed."
+          },
+          "relativeDeviationPercent": {
+            "type": "number"
+          },
+          "assessmentExplanation": {
+            "type": "string",
+            "description": "Provides a human-readable interpretation of a benchmark assessment, including the calculated KPI value, applicable benchmark, comparison condition, assessment outcome, and relevant limitations. This information supports the presentation and explanation of benchmarking results in NARRATE dashboards and decision-support applications."
+          },
+          "assessmentStatus": {
+            "type": "string",
+            "description": "Records the outcome status of a benchmark assessment. Permitted values include TARGET_MET when the calculated KPI result satisfies the benchmark, TARGET_NOT_MET when it does not satisfy the benchmark, and NOT_ASSESSED when a valid comparison could not be completed."
+          },
+          "assessmentTimestamp": {
+            "type": "string",
+            "description": "ecords the date and time at which a KPI benchmark assessment was performed. This timestamp supports chronological analysis, traceability, auditing, and the interpretation of assessment outcomes against benchmark validity periods."
+          },
+          "absoluteDeviation": {
+            "type": "number"
+          },
+          "assessesAgainstBenchmark": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Associates a benchmark assessment with the KPI benchmark used to evaluate the calculated result. The referenced benchmark defines the comparison value, measurement unit, comparison operator, source, and applicable validity conditions. This relationship ensures that each assessment can be traced to the benchmark against which it was performed."
+          },
+          "assessesEvaluation": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Identifies the KPI evaluation whose computed result is assessed by a benchmark assessment. This relationship establishes traceability from the comparison outcome to the original KPI calculation, including its value, evaluation context, formula, and provenance."
           }
         }
       },
@@ -17409,6 +20037,37 @@
           }
         }
       },
+      "DisruptionCause": {
+        "type": "object",
+        "properties": {
+          "disruptionCauseID": {
+            "type": "string",
+            "description": "Unique identifier assigned to an identified disruption cause within NARRATE."
+          },
+          "disruptionCauseDescription": {
+            "type": "string"
+          },
+          "disruptionCauseType": {
+            "type": "string",
+            "enum": [
+              "ExternalEvent",
+              "HumanError",
+              "MaterialShortage",
+              "Other",
+              "RegulatoryChange",
+              "SupplierIssue",
+              "TechincalFailure"
+            ]
+          },
+          "isCauseOfDisruption": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Identifies the disruption associated with an identified underlying cause."
+          }
+        }
+      },
       "Sustainability": {
         "type": "object",
         "properties": {
@@ -17533,6 +20192,13 @@
               "type": "string"
             },
             "description": "Indicates that the environmental sensor provides environmental monitoring data used by the SustainabilityBlueprint for sustainability analysis and environmental impact assessment."
+          },
+          "sensorDetectsDisruption": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Identifies disruptions detected using observations or measurements provided by a sensor."
           }
         }
       },
@@ -17919,40 +20585,19 @@
             "type": "string",
             "description": "Date/time when shipment occurred"
           },
-          "isGovernedBySLA_Shipment": {
+          "usesTransportRoute": {
             "type": "array",
             "items": {
               "type": "string"
             },
-            "description": ""
+            "description": "Associates a shipment with a transportation route used or planned for its delivery."
           },
-          "hasCarrier": {
+          "transportsMaterial": {
             "type": "array",
             "items": {
               "type": "string"
             },
-            "description": "Links to the Carrier responsible for transporting the shipment."
-          },
-          "deliversTo": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "description": "Links to the delivery Location \u2192 where the shipment is going (can reuse your Location class)."
-          },
-          "monitoredByLogisticsSensor": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "description": "InverseOf isDeployedOnShipment: Indicates the shipment on which the logistics sensor is installed or associated, enabling tracking of shipment conditions during transportation."
-          },
-          "isForProduct": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "description": "Links the shipment to the related Manufactured Product."
+            "description": "Associates a shipment with the raw material transported in that shipment."
           },
           "hasShipmentDeliverySchedule": {
             "type": "array",
@@ -17960,13 +20605,6 @@
               "type": "string"
             },
             "description": "Shipment is assigned to DeliverySchedule"
-          },
-          "isEvaluatedByLogisticsKPI": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "description": "Indicates that a Shipment is assessed by a LogisticsKPI, providing sustainability-related performance measurements for that shipment."
           },
           "hasShipmentSustainability": {
             "type": "array",
@@ -17995,6 +20633,55 @@
               "type": "string"
             },
             "description": ""
+          },
+          "isGovernedBySLA_Shipment": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": ""
+          },
+          "hasCarrier": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Links to the Carrier responsible for transporting the shipment."
+          },
+          "shipmentAffectedByDisruption": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Identifies disruptions affecting the transportation, delivery, or fulfillment of a shipment."
+          },
+          "deliversTo": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Links to the delivery Location \u2192 where the shipment is going (can reuse your Location class)."
+          },
+          "monitoredByLogisticsSensor": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "InverseOf isDeployedOnShipment: Indicates the shipment on which the logistics sensor is installed or associated, enabling tracking of shipment conditions during transportation."
+          },
+          "isForProduct": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Links the shipment to the related Manufactured Product."
+          },
+          "isEvaluatedByLogisticsKPI": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Indicates that a Shipment is assessed by a LogisticsKPI, providing sustainability-related performance measurements for that shipment."
           }
         }
       },
@@ -18174,6 +20861,13 @@
           "derivationLogic": {
             "type": "string",
             "description": "Describes the rule, condition, or logic used to derive the event (e.g., threshold rule, CEP query, prediction model). For example: \"argonGasLevel < 20%\""
+          },
+          "isDisruptionEventOf": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Identifies the disruption associated with a recorded resolution outcome."
           }
         }
       },
@@ -18310,6 +21004,13 @@
             },
             "description": ""
           },
+          "slaStipulationAffectedByDisruption": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Identifies disruptions affecting or potentially jeopardizing the fulfillment of a specific service-level stipulation."
+          },
           "SLAStiplulationOf": {
             "type": "array",
             "items": {
@@ -18323,6 +21024,68 @@
               "type": "string"
             },
             "description": "Inverse of violatesStipulation: Indicates that a detected operational event (e.g., delivery delay, production bottleneck, or quality issue) results in the violation of a specific SLA stipulation defined in an SLA agreement. This property connects the operational event monitoring layer with the SLA governance layer, enabling the system to identify contractual breaches caused by operational disruptions."
+          }
+        }
+      },
+      "TransportRoute": {
+        "type": "object",
+        "properties": {
+          "routeOrigin": {
+            "type": "string",
+            "description": "Identifies the geographical location where transportation along the route begins."
+          },
+          "transportRouteID": {
+            "type": "string",
+            "description": "Unique identifier assigned to a transportation route within NARRATE."
+          },
+          "estimatedTransitTime": {
+            "type": "number"
+          },
+          "transportRouteDescription": {
+            "type": "string",
+            "description": "Describes the transportation route, including its geographical coverage and operational purpose."
+          },
+          "routeDestination": {
+            "type": "string",
+            "description": "Identifies the geographical location where transportation along the route ends."
+          },
+          "routeDistance": {
+            "type": "number"
+          },
+          "transportRouteStatus": {
+            "type": "string",
+            "enum": [
+              "Available",
+              "Disrupted",
+              "Restricted",
+              "Unavailable",
+              "Unknown"
+            ]
+          },
+          "transportRouteName": {
+            "type": "string",
+            "description": "Short human-readable name identifying a transportation route."
+          },
+          "routeUsedByShipment": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Identifies shipments that use or are scheduled to use a transportation route."
+          },
+          "routeOperatedBy": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Identifies the logistics partner responsible for operating or managing a transportation route."
+          },
+          "transportRouteAffectedByDisruption": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Identifies disruptions affecting the availability, accessibility, or operational performance of a transportation route."
           }
         }
       },
@@ -18518,6 +21281,13 @@
           "isTransportProvider": {
             "type": "string"
           },
+          "supplierAffectedByDisruption": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Identifies a disruption affecting the supplier's ability to fulfill its supply commitments."
+          },
           "hasSupplierMetadata": {
             "type": "array",
             "items": {
@@ -18567,6 +21337,217 @@
               "type": "string"
             },
             "description": ""
+          }
+        }
+      },
+      "Disruption": {
+        "type": "object",
+        "properties": {
+          "disruptionDetectionTime": {
+            "type": "string",
+            "description": "Date and time at which the disruption was first detected or identified by a NARRATE component or participating organization."
+          },
+          "disruptionStatus": {
+            "type": "string",
+            "enum": [
+              "Active",
+              "Cancelled",
+              "Closed",
+              "Detected",
+              "Mitigating",
+              "Recovering",
+              "Resolved",
+              "UnderAssessment"
+            ]
+          },
+          "disruptionID": {
+            "type": "string"
+          },
+          "disruptionDescription": {
+            "type": "string",
+            "description": "Detailed textual description of the disruption, including its nature and relevant operational context."
+          },
+          "disruptionOccurrenceTime": {
+            "type": "string",
+            "description": "Date and time at which the disruption actually occurred, when known. This may differ from its detection time."
+          },
+          "disruptionSeverity": {
+            "type": "string",
+            "enum": [
+              "Critical",
+              "High",
+              "Low",
+              "Medium",
+              "veryLow"
+            ]
+          },
+          "estimatedRecoveryTime": {
+            "type": "number"
+          },
+          "disruptionName": {
+            "type": "string",
+            "description": "Short, human-readable name identifying the operational disturbance."
+          },
+          "affectsProcessExecution": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Associates a disruption with a specific execution of a production process whose progress, timing, resource availability, or operational outcome is affected."
+          },
+          "hasDisruptionResolution": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Associates a disruption with a record describing its resolution status and the outcome of recovery efforts."
+          },
+          "affectsLogisticsPartner": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Associates a disruption with a logistics partner whose transportation, shipment handling, or delivery operations are affected."
+          },
+          "occursAtLocation": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Associates a disruption with the physical or geographical location where it occurs or originates."
+          },
+          "affectsShipmentByDisruption": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Associates a disruption with a shipment whose transportation, delivery, or fulfillment is affected."
+          },
+          "affectsKPIByDisruption": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Associates a disruption with a key performance indicator whose measured value, target achievement, or operational performance may be affected."
+          },
+          "affectsTransportRoute": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Associates a disruption with a transportation route whose availability, accessibility, or operational performance is affected."
+          },
+          "affectsWarehouse": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Associates a disruption with a warehouse whose storage, inventory availability, material handling, or dispatch operations are affected."
+          },
+          "affectsSupplier": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Associates a disruption with a supplier whose ability to provide materials, components, or services is affected."
+          },
+          "affectsMaterial": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Associates a disruption with a material whose availability, delivery, or use in production is affected."
+          },
+          "affectsSLAStipulation": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Associates a disruption with a service-level stipulation whose fulfillment, performance requirements, or contractual commitments are affected or at risk."
+          },
+          "hasDisruptionCause": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Associates a disruption with its identified underlying cause, when known."
+          },
+          "affectsSLAgreement": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Associates a disruption with a service-level agreement whose delivery, performance, or operational commitments are affected or at risk."
+          },
+          "hasMitigationStrategy": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Associates a disruption with a proposed or selected strategy for reducing its impact and supporting operational recovery."
+          },
+          "detectedBySensor": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Associates a disruption with a sensor that provides observations or measurements contributing to its detection."
+          },
+          "hasImpactAssessment": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Associates a disruption with an assessment of its actual or potential operational and business consequences."
+          },
+          "hasDisruptionType": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Associates a disruption with the type used to classify its operational or supply-chain nature."
+          },
+          "affectsProductionPlan": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Associates a disruption with a production plan whose scheduled activities, resource requirements, or planned manufacturing execution are affected."
+          },
+          "hasDisruptionEvent": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": ""
+          },
+          "affectsDeliverySchedule": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Associates a disruption with a delivery schedule whose planned transportation, shipment, or delivery activities are affected."
+          },
+          "affectsWorkOrder": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Associates a disruption with a work order whose planned fulfillment, production activities, or completion schedule are affected."
+          },
+          "affectsProductionProcess": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Associates a disruption with a production process whose execution, scheduling, resource availability, or operational performance is affected."
+          },
+          "affectsLogisticsSustainability": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Associates a disruption with the sustainability performance or environmental consequences of logistics operations affected by the disruption."
           }
         }
       },
@@ -18646,6 +21627,13 @@
           "modelNumber": {
             "type": "string",
             "description": "Device model"
+          },
+          "sensorDetectsDisruption": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Identifies disruptions detected using observations or measurements provided by a sensor."
           }
         }
       },
@@ -18795,7 +21783,12 @@
           },
           "actionStatus": {
             "type": "string",
-            "description": "Current state of the action (e.g., Planned, InProgress, Completed)."
+            "enum": [
+              "Cancelled",
+              "Completed",
+              "InExecution",
+              "Planned"
+            ]
           },
           "actionID": {
             "type": "string",
@@ -18895,6 +21888,13 @@
               "type": "string"
             },
             "description": "Indicates that a DeliverySchedule is defined for and associated with a specific Customer for planned delivery operations."
+          },
+          "deliveryScheduleAffectedByDisruption": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Identifies disruptions affecting the planned transportation, shipment, or delivery activities represented by a delivery schedule."
           }
         }
       },
@@ -18945,6 +21945,13 @@
               "type": "string"
             },
             "description": "Associates the logistics event with the delivery schedule or logistics planning instance."
+          },
+          "isDisruptionEventOf": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Identifies the disruption associated with a recorded resolution outcome."
           },
           "logisticsEventTriggeredBy": {
             "type": "array",
@@ -19356,6 +22363,13 @@
             },
             "description": "Associates a ProcessExecution with the ManufacturedComponent entities produced during the runtime execution of a manufacturing process. Links a ProcessExecution to one or more ManufacturedComponent entities generated, assembled, transformed, or produced as outputs of the runtime manufacturing execution activity."
           },
+          "processExecutionAffectedByDisruption": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Identifies disruptions affecting the progress, timing, resource availability, or operational outcome of a specific production process execution."
+          },
           "usesMachineInstance": {
             "type": "array",
             "items": {
@@ -19375,12 +22389,18 @@
       "ProductSustainability": {
         "type": "object",
         "properties": {
+          "hasGasCarbonKG": {
+            "type": "number"
+          },
           "hasEcoDesignCompliance": {
             "type": "string",
             "enum": [
               "no",
               "yes"
             ]
+          },
+          "hasOtherEnergyCarbonKG": {
+            "type": "number"
           },
           "hasProductReusabilityScore": {
             "type": "number"
@@ -19400,6 +22420,15 @@
             "type": "string",
             "description": "End-of-life treatment or disposal plan"
           },
+          "hasEmbodiedCarbonKG": {
+            "type": "number"
+          },
+          "hasWaterWasteProduct": {
+            "type": "number"
+          },
+          "hasFuelCarbonKG": {
+            "type": "number"
+          },
           "sustainabilityRating": {
             "type": "string",
             "enum": [
@@ -19409,6 +22438,9 @@
             ]
           },
           "hasProductRepairabilityScore": {
+            "type": "number"
+          },
+          "hasWaterUsageProduct": {
             "type": "number"
           },
           "hasRenewableMaterialPercent": {
@@ -19434,6 +22466,9 @@
             "type": "number"
           },
           "hasTotalCarbonFootprint": {
+            "type": "number"
+          },
+          "hasElectricityCarbonKG": {
             "type": "number"
           },
           "hasSustainCertification": {
@@ -19545,6 +22580,13 @@
           },
           "hasWarehouseAreaM2": {
             "type": "number"
+          },
+          "warehouseAffectedByDisruption": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Identifies disruptions affecting the storage, inventory availability, material handling, or dispatch operations of a warehouse."
           },
           "hasWarehouseLocation": {
             "type": "array",
@@ -19740,12 +22782,77 @@
             },
             "description": ""
           },
+          "logisticsPartnerAffectedByDisruption": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Identifies disruptions affecting the transportation, shipment handling, or delivery operations of a logistics partner."
+          },
           "operatesCarrier": {
             "type": "array",
             "items": {
               "type": "string"
             },
             "description": ""
+          },
+          "operatesTransportRoute": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Associates a logistics partner with a transportation route that it operates or manages for shipment delivery."
+          }
+        }
+      },
+      "ImpactAssessment": {
+        "type": "object",
+        "properties": {
+          "impactLevel": {
+            "type": "string",
+            "enum": [
+              "Critical",
+              "High",
+              "Low",
+              "Medium",
+              "VeryLow"
+            ]
+          },
+          "impactDescription": {
+            "type": "string",
+            "description": "Describes the actual or expected consequences of a disruption on operations, production, supply-chain activities, or delivery commitments."
+          },
+          "estimatedImpactDuration": {
+            "type": "number"
+          },
+          "impactAssessmentTime": {
+            "type": "string",
+            "description": "Records the date and time when the disruption's impact was assessed."
+          },
+          "impactAssessmentID": {
+            "type": "string",
+            "description": "Unique identifier assigned to an impact assessment within NARRATE."
+          },
+          "usesKPIEvaluation": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Associates an impact assessment with a KPI evaluation used to determine the operational or business consequences of a disruption."
+          },
+          "isImpactAssessmentOf": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Identifies the disruption whose operational or business consequences are evaluated by an impact assessment"
+          },
+          "assessesKPI": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Associates an impact assessment with a key performance indicator evaluated to determine the operational or business consequences of a disruption"
           }
         }
       },
@@ -19909,19 +23016,19 @@
             },
             "description": ""
           },
+          "materialAffectedByDisruption": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Identifies a disruption affecting the availability, delivery, or production use of a material."
+          },
           "materialIsStoredIn": {
             "type": "array",
             "items": {
               "type": "string"
             },
             "description": "Material stored in a Warehouse"
-          },
-          "materialOfBOM": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "description": ""
           },
           "hasMaterialSustainability": {
             "type": "array",
@@ -19930,14 +23037,28 @@
             },
             "description": ""
           },
-          "isRequiredByProcess": {
+          "materialOfComponent": {
             "type": "array",
             "items": {
               "type": "string"
             },
             "description": ""
           },
-          "materialOfComponent": {
+          "isTransportedByShipment": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Associates a raw material with the shipment responsible for its transportation."
+          },
+          "materialOfBOM": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": ""
+          },
+          "isRequiredByProcess": {
             "type": "array",
             "items": {
               "type": "string"
@@ -20105,6 +23226,13 @@
           },
           "isTransportProvider": {
             "type": "string"
+          },
+          "supplierAffectedByDisruption": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Identifies a disruption affecting the supplier's ability to fulfill its supply commitments."
           },
           "hasSupplierMetadata": {
             "type": "array",
@@ -20278,6 +23406,13 @@
           "hasFuelEfficiencyKMPerLitre": {
             "type": "number"
           },
+          "logisticsSustainabilityAffectedByDisruption": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Identifies disruptions affecting the sustainability performance or environmental consequences represented by a logistics sustainability entity."
+          },
           "sustainabilityOfCarrier": {
             "type": "array",
             "items": {
@@ -20336,6 +23471,9 @@
           "hasAvgCO2PerKM": {
             "type": "number"
           },
+          "hasTransportEmissionFactor": {
+            "type": "number"
+          },
           "sustainabilityOfShipment": {
             "type": "array",
             "items": {
@@ -20348,12 +23486,24 @@
       "KPIEvaluation": {
         "type": "object",
         "properties": {
+          "evaluationDataTimestamp": {
+            "type": "string",
+            "description": "Timestamp representing the time of the source data or historical observation for which the KPI was evaluated. May differ from the timestamp when the KPI evaluation was executed."
+          },
           "evaluationConfidenceScore": {
             "type": "number"
           },
           "evaluationID": {
             "type": "string",
             "description": "Unique identifier for the KPI evaluation instance"
+          },
+          "calculationMethod": {
+            "type": "string",
+            "description": "Describes the method used to calculate the KPI evaluation result, such as direct calculation or mass-based allocation."
+          },
+          "calculationVersion": {
+            "type": "string",
+            "description": "Identifies the version of the calculation method or algorithm used to produce the KPI evaluation result."
           },
           "evaluationStatus": {
             "type": "string",
@@ -20373,6 +23523,24 @@
           "computedValue": {
             "type": "number"
           },
+          "resultProvenance": {
+            "type": "string",
+            "description": "Identifies how the KPI evaluation result was obtained, such as measured, calculated, estimated, or allocated."
+          },
+          "hasEvaluatedEntity": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Identifies the primary NARRATE entity whose performance or sustainability characteristics are measured by a KPI evaluation. The evaluated entity may be a raw material, manufactured product, or production process, depending on the KPI's evaluation level. This relationship distinguishes the subject of measurement from other contextual entities used to perform the calculation."
+          },
+          "hasEvaluationContext": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Associates a KPI evaluation with the NARRATE entity or entities that establish the context of the calculation. Contextual entities may include raw materials, manufactured products, production processes, or other relevant manufacturing resources. The relationship supports cross-Blueprint traceability and distinguishes the subject and scope of a calculated KPI result."
+          },
           "usesFormula": {
             "type": "array",
             "items": {
@@ -20386,6 +23554,20 @@
               "type": "string"
             },
             "description": "Links a KPIEvaluation to the Event that triggered its execution, capturing the temporal or operational cause of the evaluation."
+          },
+          "hasBenchmarkAssessment": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Associates a KPI evaluation with one or more benchmark assessments performed on its computed result. Each assessment records the outcome of comparing the evaluation against a particular benchmark, enabling multiple targets or reference values to be considered independently."
+          },
+          "kpiEvaluationUsedByImpactAssessment": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Identifies impact assessments that use a KPI evaluation to determine the operational or business consequences of a disruption."
           },
           "evaluatesKPI": {
             "type": "array",
@@ -20427,6 +23609,13 @@
           "kpiValue": {
             "type": "number"
           },
+          "hasEvaluationLevel": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Associates a KPI definition with the level of analysis at which its values are intended to be evaluated. The evaluation level determines whether the KPI concerns an individual raw material, a manufactured product, or a production process. This relationship supports consistent selection of evaluation contexts, aggregation rules, and applicable benchmarks."
+          },
           "isProducedByFormula": {
             "type": "array",
             "items": {
@@ -20454,6 +23643,20 @@
               "type": "string"
             },
             "description": "Inverse of affectsKPI: Links an event to one or more KPIs that are impacted, enabling performance evaluation and monitoring."
+          },
+          "kpiAffectedByDisruption": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Identifies disruptions that affect or may affect the measured value, target achievement, or operational performance represented by a key performance indicator."
+          },
+          "kpiAssessedByImpactAssessment": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Identifies impact assessments that evaluate a key performance indicator to determine the operational or business consequences of a disruption."
           },
           "isEvaluatedByEvaluation": {
             "type": "array",
@@ -20538,6 +23741,13 @@
               "type": "string"
             },
             "description": ""
+          },
+          "locationOfDisruption": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Identifies disruptions that occur or originate at a particular physical or geographical location"
           },
           "locationOfCustomer": {
             "type": "array",
